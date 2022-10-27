@@ -81,4 +81,30 @@ contract Marketplace is ReentrancyGuard {
             _price
         );
     }
+
+    //buy an NFT
+    function buyNFT(address _nftContract, uint256 _tokenId)
+        public
+        payable
+        nonReentrant
+    {
+        NFT storage nft = _idToNFT[_tokenId];
+        require(
+            msg.value >= nft.price,
+            "Not enought ether to cover asking price"
+        );
+        address payable buyer = payable(msg.sender);
+        payable(nft.seller).transfer(msg.value);
+        IERC721(_nftContract).safeTransferFrom(
+            address(this),
+            buyer,
+            nft.tokenId
+        );
+        _marketOwner.transfer(LISTING_FEE);
+        nft.owner = buyer;
+        nft.listed = false;
+
+        _nftsSold.increment();
+        emit NFTSold(_nftContract, nft.tokenId, nft.seller, buyer, msg.value);
+    }
 }
