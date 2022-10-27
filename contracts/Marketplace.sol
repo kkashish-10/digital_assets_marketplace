@@ -137,4 +137,65 @@ contract Marketplace is ReentrancyGuard {
             _price
         );
     }
+
+    //get listing fee
+    function getListingFee() public view returns (uint256) {
+        return LISTING_FEE;
+    }
+
+    //get listed NFTs from the marketplace
+    function getListedNFTs() public view returns (NFT[] memory) {
+        uint256 nftCount = _nftsCount.current();
+        uint256 unsoldNFTsCount = nftCount - _nftsSold.current();
+
+        NFT[] memory nfts = new NFT[](unsoldNFTsCount);
+        uint256 nftsIndex = 0;
+        for (uint256 i = 0; i < nftCount; i++) {
+            if (_idToNFT[i + 1].listed) {
+                nfts[nftsIndex] = _idToNFT[i + 1];
+                nftsIndex++;
+            }
+        }
+        return nfts;
+    }
+
+    //get NFTs from users account
+    function getMyNFTs() public view returns (NFT[] memory) {
+        uint256 nftCount = _nftsCount.current();
+        uint256 myNFTCount = 0;
+        for (uint256 i = 0; i < nftCount; i++) {
+            if (_idToNFT[i + 1].owner == msg.sender) myNFTCount++;
+        }
+
+        NFT[] memory nfts = new NFT[](myNFTCount);
+        uint256 nftIndex = 0;
+        for (uint256 i = 0; i < myNFTCount; i++) {
+            if (_idToNFT[i + 1].seller == msg.sender && _idToNFT[i + 1].listed)
+                nfts[nftIndex++] = _idToNFT[i + 1];
+        }
+
+        return nfts;
+    }
+
+    //get NFT's listed on Marketplace from user's account
+
+    function getMyListedNFTs() public view returns (NFT[] memory) {
+        uint256 nftCount = _nftsCount.current();
+        uint256 myListedNFTCount = 0;
+        for (uint256 i = 0; i < nftCount; i++) {
+            if (_idToNFT[i + 1].seller == msg.sender && _idToNFT[i + 1].listed)
+                myListedNFTCount++;
+        }
+
+        NFT[] memory nfts = new NFT[](myListedNFTCount);
+
+        uint256 nftIndex = 0;
+
+        for (uint256 i = 0; i < nftCount; i++) {
+            if (_idToNFT[i + 1].seller == msg.sender && _idToNFT[i + 1].listed)
+                nfts[nftIndex++] = _idToNFT[i + 1];
+        }
+
+        return nfts;
+    }
 }
