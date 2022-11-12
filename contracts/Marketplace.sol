@@ -21,12 +21,12 @@ contract Marketplace is ReentrancyGuard {
 
     // NFT structure to store relevant information for an NFT listed in the marketplace
     struct NFT {
-        address nftContract;
-        uint256 tokenId;
-        address payable seller;
-        address payable owner;
-        uint256 price;
-        bool listed;
+        address nftContract; // BoredPetsNFT smart contract address 
+        uint256 tokenId;// unique token identifier for each NFT
+        address payable seller;// seller's wallet address which can receive ether.
+        address payable owner;// owner's wallet address which can receive ether.
+        uint256 price;// price for the NFT
+        bool listed;// flag to mark if the NFT is listed on the marketplace or not.
     }
 
     /// @notice emitted every time a NFT is listed on the marketplace
