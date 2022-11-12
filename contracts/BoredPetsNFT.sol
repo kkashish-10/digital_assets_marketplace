@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 /**
- @title BoredPetsNFT smart contract inheriting ERC721URIStorage.sol from @openzeppelin
+ @title BoredPetsNFT smart contract 
  @author ddos_kas
  @notice mints ERC721 token type NFTs and initializes the marketplace
  @dev to be a valid NFT, BoredPetsNFT implements the ERC721 standard by inheriting the implementation of ERC721URIStorage.sol

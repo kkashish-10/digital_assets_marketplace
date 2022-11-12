@@ -5,16 +5,21 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+/// @title Marketplace smartcontract
+/// @author ddos_kas
+/// @dev don't use safeTransferFrom function for asset transfer ganache accounts will raise an error
+///     `VM Exception while processing transaction: revert ERC721: transfer to non ERC721Receiver implementer`
+///     because they get destroyed as soon as chain goes offline leaving assets locked.
 contract Marketplace is ReentrancyGuard {
     using Counters for Counters.Counter; // attach every function from library Counters to type Counters.Counter
-    Counters.Counter private _nftsSold;
-    Counters.Counter private _nftsCount;
+    Counters.Counter private _nftsSold; //variable to keep count of sold NFTs
+    Counters.Counter private _nftsCount; // variable to keep count of listed NFTs
 
-    uint256 public LISTING_FEE = 0.001 ether;
-    address payable private _marketOwner;
-    mapping(uint256 => NFT) private _idToNFT;
+    uint256 public LISTING_FEE = 0.001 ether; //  taken from the seller and transferred to marketplace contract owner whenever a NFT is sold.
+    address payable private _marketOwner; // store the marketplace contract owner
+    mapping(uint256 => NFT) private _idToNFT; // mapping for a unique token id to struct
 
-    // NFT structure with instance variables
+    // NFT structure to store relevant information for an NFT listed in the marketplace
     struct NFT {
         address nftContract;
         uint256 tokenId;
@@ -24,6 +29,7 @@ contract Marketplace is ReentrancyGuard {
         bool listed;
     }
 
+    /// @notice emitted every time a NFT is listed on the marketplace
     event NFTListed(
         address nftContract,
         uint256 tokenId,
@@ -32,6 +38,7 @@ contract Marketplace is ReentrancyGuard {
         uint256 price
     );
 
+    ///@notice emitted every time a NFT is sold
     event NFTSold(
         address nftContract,
         uint256 tokenId,
@@ -44,25 +51,16 @@ contract Marketplace is ReentrancyGuard {
         _marketOwner = payable(msg.sender);
     }
 
-    /**
-    @notice Explain to an end user what this does
-    @dev Explain to a developer any extra details
-    @param _nftContract a parameter just like in doxygen (must be followed by parameter name)
-    @param _tokenId a
-    @param _price price for the NFT
-    */
+    /// @notice this function is called when a user first mints and lists their NFT, this function here transfers ownership from the user over to the Marketplace contract.
     function listNFT(
         address _nftContract,
         uint256 _tokenId,
         uint256 _price
     ) public payable nonReentrant {
+        //require tooken id to be unique
         require(_price > 0, "Price must be atleast 1 wei");
-        require(msg.value == LISTING_FEE, "Not enought ether for listing fee");
-        IERC721(_nftContract).safeTransferFrom(
-            msg.sender,
-            address(this),
-            _tokenId
-        );
+        require(msg.value == LISTING_FEE, "Not enought ether for listing fee.");
+        IERC721(_nftContract).transferFrom(msg.sender, address(this), _tokenId);
 
         _nftsCount.increment();
         _idToNFT[_tokenId] = NFT(
@@ -82,7 +80,8 @@ contract Marketplace is ReentrancyGuard {
         );
     }
 
-    //buy an NFT
+    /// @notice this function is called when a user buys a NFT, the buyer becomes the new owner of the NFT,
+    ///         the token is transferred from marketplace contract over to the buyer.
     function buyNFT(address _nftContract, uint256 _tokenId)
         public
         payable
@@ -91,16 +90,17 @@ contract Marketplace is ReentrancyGuard {
         NFT storage nft = _idToNFT[_tokenId];
         require(
             msg.value >= nft.price,
-            "Not enought ether to cover asking price"
+            "Not enough ether to cover asking price"
         );
         address payable buyer = payable(msg.sender);
-        payable(nft.seller).transfer(msg.value);
-        IERC721(_nftContract).safeTransferFrom(
-            address(this),
-            buyer,
-            nft.tokenId
+        payable(nft.seller).transfer(msg.value); //transfer ether to seller
+        IERC721(_nftContract).transferFrom(address(this), buyer, nft.tokenId);
+        //revert if there is no listing fee coverage ether in sellers account
+        require(
+            nft.seller.balance >= LISTING_FEE,
+            "Insufficient funds at seller."
         );
-        _marketOwner.transfer(LISTING_FEE);
+        _marketOwner.transfer(LISTING_FEE); // transfer listing fee to marketplace contract from seller.
         nft.owner = buyer;
         nft.listed = false;
 
@@ -108,19 +108,15 @@ contract Marketplace is ReentrancyGuard {
         emit NFTSold(_nftContract, nft.tokenId, nft.seller, buyer, msg.value);
     }
 
-    //Resell an NFT purchased from the marketplace
-    function resellNFT(
+    /// @notice this function is called when a buyer who previously bought a NFT from the marketplace wishes to resell it
+    function relistNFT(
         address _nftContract,
         uint256 _tokenId,
         uint256 _price
     ) public payable nonReentrant {
         require(_price > 0, "Price must be atleast 1 wei");
         require(msg.value == LISTING_FEE, "Not enough ether for listing fee.");
-        IERC721(_nftContract).safeTransferFrom(
-            msg.sender,
-            address(this),
-            _tokenId
-        );
+        IERC721(_nftContract).transferFrom(msg.sender, address(this), _tokenId);
 
         NFT storage nft = _idToNFT[_tokenId];
         nft.seller = payable(msg.sender);
@@ -173,7 +169,6 @@ contract Marketplace is ReentrancyGuard {
             if (_idToNFT[i + 1].seller == msg.sender && _idToNFT[i + 1].listed)
                 nfts[nftIndex++] = _idToNFT[i + 1];
         }
-
         return nfts;
     }
 
