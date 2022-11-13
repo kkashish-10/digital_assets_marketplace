@@ -21,15 +21,20 @@ contract Marketplace is ReentrancyGuard {
 
     // NFT structure to store relevant information for an NFT listed in the marketplace
     struct NFT {
-        address nftContract; // BoredPetsNFT smart contract address 
-        uint256 tokenId;// unique token identifier for each NFT
-        address payable seller;// seller's wallet address which can receive ether.
-        address payable owner;// owner's wallet address which can receive ether.
-        uint256 price;// price for the NFT
-        bool listed;// flag to mark if the NFT is listed on the marketplace or not.
+        address nftContract; // BoredPetsNFT smart contract address
+        uint256 tokenId; // unique token identifier for each NFT
+        address payable seller; // seller's wallet address which can receive ether.
+        address payable owner; // owner's wallet address which can receive ether.
+        uint256 price; // price for the NFT
+        bool listed; // flag to mark if the NFT is listed on the marketplace or not.
     }
 
-    /// @notice emitted every time a NFT is listed on the marketplace
+    /// @notice emitted every time a NFT is listed on the marketplace.
+    /// @param nftContract BoredPetsNFT smart contract address.
+    /// @param tokenId unique ERC721 token identifier for each NFT.
+    /// @param seller seller's wallet address.
+    /// @param owner owner's wallet address.
+    /// @param price buy price for the NFT.
     event NFTListed(
         address nftContract,
         uint256 tokenId,
@@ -38,7 +43,7 @@ contract Marketplace is ReentrancyGuard {
         uint256 price
     );
 
-    ///@notice emitted every time a NFT is sold
+    ///@notice emitted every time a NFT is sold, see {Marketplace-NFTListed} for argument list details.
     event NFTSold(
         address nftContract,
         uint256 tokenId,

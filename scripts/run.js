@@ -3,7 +3,7 @@ var Marketplace= artifacts.require("Marketplace");
 
 async function logNFTLists(marketplace){
     let listedNFTs= await marketplace.getListedNFTs.call()
-    const accountAddress= '0x7a56cF48f1C181DF53A34Ef4b24C2d2c93f2f7aE' //deployer address
+    const accountAddress= '0x59627f3b6A248B7dB21C025b46415B793B099780' //deployer address
     let myNFTs= await marketplace.getMyListedNFTs.call({from: accountAddress})
     let myListedNFTs = await marketplace.getMyListedNFTs.call({from: accountAddress})
     console.log(`listedNFTs: ${listedNFTs.length}`)
