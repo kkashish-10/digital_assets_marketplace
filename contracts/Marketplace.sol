@@ -56,13 +56,18 @@ contract Marketplace is ReentrancyGuard {
         _marketOwner = payable(msg.sender);
     }
 
-    /// @notice this function is called when a user first mints and lists their NFT, this function here transfers ownership from the user over to the Marketplace contract.
+    /// @notice this function is called when a user for first time lists their NFT on the marketplace,transfers ownership from the user over to the Marketplace contract
+    /// @dev Function is immune to Reentrancy Attacks, and could not use safeTransferFrom() function to ensure the token is not locked forever because of Ganache chain drawbacks.
+    /// @param _nftContract BoredPetsNFT smart contract address.
+    /// @param _tokenId unique ERC721 token identifier for each NFT.
+    /// @param _price buy price for the NFT.
     function listNFT(
         address _nftContract,
         uint256 _tokenId,
         uint256 _price
     ) public payable nonReentrant {
-        //require tooken id to be unique
+        //require token id to be unique
+        
         require(_price > 0, "Price must be atleast 1 wei");
         require(msg.value == LISTING_FEE, "Not enought ether for listing fee.");
         IERC721(_nftContract).transferFrom(msg.sender, address(this), _tokenId);
